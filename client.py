@@ -2,7 +2,6 @@ import pygame
 pygame.mixer.init(44100, -16, 2, 512)
 pygame.init()
 
-
 import sys
 import socket
 import random
@@ -19,9 +18,6 @@ class Client(object):
 
 		self.screen = pygame.display.set_mode((800, 600))
 		
-		self.posX = 100
-		self.posY = 100
-
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.setblocking(0)
 		

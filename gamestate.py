@@ -37,7 +37,6 @@ class GameState(object):
 			if player.name == name:
 				player.posX += velX
 				player.posY += velY
-				
 
 	def toString(self):
 		positionList = []
@@ -62,7 +61,6 @@ class GameState(object):
 			player.posY = posY
 			
 			self.players.append(player)
-
 
 	def getPlayers(self):
 		return self.players[:]
