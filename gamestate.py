@@ -56,16 +56,13 @@ class GameState(object):
 		
 		return positionString
 	
-	def fromString(self, data):
+	def fromString(self, args):
 		"""Update de wereld aan de hand van string 'data'.
 		"""
 		
 		# Reset de lijst met players.
 		self.players = []
 
-		# Args uitlezen.
-		args = " ".join(data.split(" ")[1:])
-		
 		# Voeg voor elke positie een player toe.
 		for position in args.split("|"):
 			

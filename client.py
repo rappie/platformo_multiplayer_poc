@@ -27,6 +27,9 @@ class Client(object):
 		# Maak socket aan.
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.setblocking(0)
+		
+		# ID van onze connectie met de server.
+		self.connectionId = None
 
 		# Gamestate object.
 		self.gameState = GameState()
@@ -35,9 +38,6 @@ class Client(object):
 		self.serverAddress = sys.argv[1]
 		self.playerName = sys.argv[2]
 		
-		# Connect met de server.
-		self.sock.sendto("connect %s" % self.playerName, (self.serverAddress, 12221))
-
 	def handleEvents(self):
 		"""Handle pygame events af.
 		"""
@@ -68,20 +68,47 @@ class Client(object):
 		
 		# Als er een velocity is, stuur deze door naar de server.
 		if velX != 0 or velY != 0:
-			self.sock.sendto("move %s %i %i" % (self.playerName, velX, velY), (self.serverAddress, 12221))
+			self.sock.sendto("%i move %s %i %i" % (self.connectionId, self.playerName, velX, velY), (self.serverAddress, 12221))
 
-	def handleServer(self):
-		"""Handel server network input af.
+	def handleNetworkRequest(self, data, address):
+		"""Handel een netwerk request af.
+		"""
+		# Lees bericht uit.
+		id = int(data.split(" ")[0])
+		command = data.split(" ")[1]
+		args = " ".join(data.split(" ")[2:])
+		
+		# Check of het ons ID heeft.
+		if id not in [0, self.connectionId]:
+			return
+
+		# Welcome command bij inloggen.
+		if command == "welcome":
+			playerName = args.split(" ")[0]
+			if playerName == self.playerName:
+				connectionId = int(args.split(" ")[1])
+				self.connectionId = connectionId
+				print "Connected! Connection ID = %i" % connectionId
+
+		# Updaten van de posities.
+		elif command == "update":
+			self.gameState.fromString(args)
+		
+		# Onbekend request.
+		else:
+			print "Unknown network command: %s" % data
+		
+	def handleConnection(self):
+		"""Handel server connection shit af.
 		"""
 
 		try:
-			data, addr = self.sock.recvfrom( 1024 )
+			data, address = self.sock.recvfrom( 1024 )
 		except socket.error:
 			pass
 		else:
-			#print "received message:", data
-			if data.split(" ")[0] == "update":
-				self.gameState.fromString(data)
+			#print "Received message:", data
+			self.handleNetworkRequest(data, address)
 
 	def draw(self):
 		"""Teken het scherm.
@@ -101,6 +128,9 @@ class Client(object):
 	def run(self):
 		"""Start de main loop.
 		"""
+
+		# Connect met de server.
+		self.sock.sendto("0 connect %s" % self.playerName, (self.serverAddress, 12221))
 		
 		# Ga eeuwig door.
 		while True:
@@ -112,7 +142,7 @@ class Client(object):
 			self.move()
 			
 			# Server network input afhandelen.
-			self.handleServer()
+			self.handleConnection()
 			
 			# Tekenen.
 			self.draw()

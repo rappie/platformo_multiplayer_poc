@@ -13,6 +13,16 @@ HOSTNAME = socket.gethostname()
 PORT = 12221
 
 
+# Globale ID's genereren voor connections.
+nextId = 0
+def getNextId():
+	"""Return een uniek ID voor een connection.
+	"""
+	global nextId
+	nextId += 1
+	return nextId
+
+
 class Server(object):
 	"""Server object.
 	"""
@@ -30,28 +40,44 @@ class Server(object):
 		self.gameState = GameState()
 		
 		# Lijst met alle connections.
-		self.connections = []
+		self.connections = {}
 		
 	def handleRequest(self, data, address):
 		"""Handel een request af.
 		"""
-		command = data.split(" ")[0]
-		args = " ".join(data.split(" ")[1:])
+		id = int(data.split(" ")[0])
+		command = data.split(" ")[1]
+		args = " ".join(data.split(" ")[2:])
 		
 		# Connecten.
 		if command == "connect":
+			
+			# Informatie ophalen uit packet.
 			name = args
-			print "player connected: %s" % name
-			self.connections.append(address)
+			id = getNextId()
+			
+			# Connectie opslaan.
+			self.connections[id] = address
+			print "Player connected; %s (ID:%i)" % (name, id)
+
+			# Player toevoegen aan game.
 			self.gameState.addPlayer(name)
+			
+			# Welcome command terugsturen naar client.
+			welcomeString = "0 welcome %s %i" % (name, id)
+			self.sock.sendto(welcomeString, address)
 
 		# Moven.
-		if command == "move":
+		elif command == "move":
 			name = args.split(" ")[0]
 			velX = int(args.split(" ")[1])
 			velY = int(args.split(" ")[2])
-			#print "moving player %s to %i %i" % (name, velX, velY)
+			#print "Moving player %s to %i %i" % (name, velX, velY)
 			self.gameState.movePlayer(name, velX, velY)
+
+		# Onbekend request.
+		else:
+			print "Unknown network command: %s" % data
 		
 	def run(self):
 		"""Run de main loop van de server.
@@ -66,12 +92,12 @@ class Server(object):
 			except socket.error:
 				pass
 			else:
-				#print "received message:", data
+				#print "Received message:", data
 				self.handleRequest(data, address)
 			
 			# Verstuur naar iedereen de nieuwe posities.			
-			positionString = self.gameState.toString()
-			for connection in self.connections:
+			for id, connection in self.connections.items():
+				positionString = "%i %s" % (id, self.gameState.toString())
 				self.sock.sendto(positionString, connection)
 			
 			# Wachten.
