@@ -21,8 +21,9 @@ class Client(object):
 	
 	def __init__(self):
 
-		# Maak pygame screen aan.
+		# Maak screen en font aan.
 		self.screen = pygame.display.set_mode((800, 600))
+		self.font = pygame.font.Font(None, 20)
 		
 		# Maak socket aan.
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -38,16 +39,29 @@ class Client(object):
 		self.serverAddress = sys.argv[1]
 		self.playerName = sys.argv[2]
 		
+		# Variabelen voor autopilot
+		self.autopilot = False
+		self.autopilotVelX = 0
+		self.autopilotVelY = 0
+		self.autopilotLastTick = 0
+		self.autopilotDelay = 1000
+		
 	def handleEvents(self):
 		"""Handle pygame events af.
 		"""
 		events = pygame.event.get()
 		
-		# Als je op Q drukt ga je eruit.
+		# Vang key events af.
 		for event in events:
 			if event.type == pygame.KEYDOWN:
+				
+				# Q is afsluiten.
 				if event.key == pygame.K_q:
 					sys.exit()
+					
+				# A is autopilot toggle.
+				if event.key == pygame.K_a:
+					self.autopilot = not self.autopilot
 					
 		# Stuur events door naar input state.
 		inputState.handleInput(events)
@@ -55,6 +69,31 @@ class Client(object):
 	def move(self):
 		"""Voer movement uit.
 		"""
+		if self.autopilot == True:
+			# Autopilot movement.
+			self.moveAutopilot()
+		else:
+			# Manual movement.
+			self.moveManual()
+			
+	def moveAutopilot(self):
+		"""Movement voor als de autopilot aan staat.
+		"""
+		# Check of er van richting veranderd moet worden.
+		ticks = pygame.time.get_ticks()
+		if ticks > self.autopilotLastTick + self.autopilotDelay:
+			self.autopilotLastTick = ticks
+			self.autopilotVelX = random.randint(-1, 1) * MOVE_SPEED
+			self.autopilotVelY = random.randint(-1, 1) * MOVE_SPEED
+			self.autopilotDelay = random.randint(200, 1000)
+		
+		# Stuur movement door naar de server.
+		self.sendMove(self.autopilotVelX, self.autopilotVelY)
+	
+	def moveManual(self):
+		"""Movement voor als je op manual control staat.
+		"""
+
 		# Bepaal velocity aan de hand van de input state.
 		velX = velY = 0
 		if inputState.getMovementState("left") == True:
@@ -66,6 +105,12 @@ class Client(object):
 		if inputState.getMovementState("down") == True:
 			velY = MOVE_SPEED
 		
+		# Stuur movement door naar de server.
+		self.sendMove(velX, velY)
+	
+	def sendMove(self, velX, velY):
+		"""Verstuur movement naar de server.
+		"""
 		# Als er een velocity is, stuur deze door naar de server.
 		if velX != 0 or velY != 0:
 			self.sock.sendto("%i move %s %i %i" % (self.connectionId, self.playerName, velX, velY), (self.serverAddress, 12221))
@@ -122,6 +167,11 @@ class Client(object):
 			ding.fill((255, 255, 255))
 			self.screen.blit(ding, player.getPosition())
 		
+		# Teken de autopilot als die aan staat.
+		if self.autopilot == True:
+			text = self.font.render("Autopilot enabled", True, (255, 255, 255))
+			self.screen.blit(text, (10, 10))
+
 		# Display updaten.
 		pygame.display.flip()
 
