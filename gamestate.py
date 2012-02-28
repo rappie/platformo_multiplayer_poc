@@ -46,6 +46,16 @@ class GameState(object):
 				self.players.remove(player)
 				break
 
+	def containsPlayerWithName(self, name):
+		"""Return of er een player is met naam 'name'.
+		"""
+		contains = False
+		for player in self.players:
+			if player.name == name:
+				contains = True
+				break
+		return contains
+
 	def movePlayer(self, name, velX, velY):
 		"""Verplaats een speler.
 		"""

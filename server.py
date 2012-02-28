@@ -55,17 +55,29 @@ class Server(object):
 			# Informatie ophalen uit packet.
 			name = args
 			id = getNextId()
-			
-			# Connectie opslaan.
-			self.connections[id] = address
-			print "Player connected: %s (ID:%i)" % (name, id)
 
-			# Player toevoegen aan game.
-			self.gameState.addPlayer(name)
-			
-			# Welcome command terugsturen naar client.
-			welcomeString = "0 welcome %s %i" % (name, id)
-			self.sock.sendto(welcomeString, address)
+			# Check of de speler met die naam al bestaat.			
+			if self.gameState.containsPlayerWithName(name) == False:
+				# Hij bestaat nog niet - toevoegen.
+				
+				# Connectie opslaan.
+				self.connections[id] = address
+				print "Player connected: %s (ID:%i)" % (name, id)
+	
+				# Player toevoegen aan game.
+				self.gameState.addPlayer(name)
+				
+				# Welcome command terugsturen naar client.
+				welcomeString = "0 welcome %s %i" % (name, id)
+				self.sock.sendto(welcomeString, address)
+	
+			else:
+				# Hij bestaat al - niet toestaan.
+				
+				# Stuur denied command terug naar de client.
+				print "Player denied: %s (name in use)" % name
+				deniedString = "0 denied %s player name in use" % name
+				self.sock.sendto(deniedString, address)
 
 		# Disconnecten.
 		elif command == "disconnect":

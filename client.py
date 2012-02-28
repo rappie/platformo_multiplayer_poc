@@ -57,7 +57,8 @@ class Client(object):
 				
 				# Q is afsluiten.
 				if event.key == pygame.K_q:
-					self.quit()
+					self.sock.sendto("%i disconnect %s" % (self.connectionId, self.playerName), (self.serverAddress, 12221))
+					sys.exit(0)
 
 				# A is autopilot toggle.
 				if event.key == pygame.K_a:
@@ -66,12 +67,6 @@ class Client(object):
 		# Stuur events door naar input state.
 		inputState.handleInput(events)
 
-	def quit(self):
-		"""Sluit de client af.
-		"""
-		self.sock.sendto("%i disconnect %s" % (self.connectionId, self.playerName), (self.serverAddress, 12221))
-		sys.exit(0)
-	
 	def move(self):
 		"""Voer movement uit.
 		"""
@@ -140,6 +135,21 @@ class Client(object):
 				connectionId = int(args.split(" ")[1])
 				self.connectionId = connectionId
 				print "Connected! Connection ID = %i" % connectionId
+		
+		# Denied command.
+		elif command == "denied":
+			
+			# Dit gaat alleen op als je nog geen verbinding hebt.
+			if self.connectionId == None:
+			
+				# Check of het om onze speler gaat.
+				playerName = args.split(" ")[0]
+				if playerName == self.playerName:
+					
+					# Sluit af met de reden die de server ons gaf.
+					reason = " ".join(args.split(" ")[1:])
+					print "Connection denied: %s" % reason
+					sys.exit(0)
 
 		# Updaten van de posities.
 		elif command == "update":
