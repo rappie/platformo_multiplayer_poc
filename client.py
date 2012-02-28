@@ -57,8 +57,8 @@ class Client(object):
 				
 				# Q is afsluiten.
 				if event.key == pygame.K_q:
-					sys.exit()
-					
+					self.quit()
+
 				# A is autopilot toggle.
 				if event.key == pygame.K_a:
 					self.autopilot = not self.autopilot
@@ -66,6 +66,12 @@ class Client(object):
 		# Stuur events door naar input state.
 		inputState.handleInput(events)
 
+	def quit(self):
+		"""Sluit de client af.
+		"""
+		self.sock.sendto("%i disconnect %s" % (self.connectionId, self.playerName), (self.serverAddress, 12221))
+		sys.exit(0)
+	
 	def move(self):
 		"""Voer movement uit.
 		"""

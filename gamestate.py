@@ -37,6 +37,14 @@ class GameState(object):
 		player.posX = random.randint(10, 300)
 		player.posY = random.randint(10, 300)
 		self.players.append(player)
+		
+	def removePlayer(self, name):
+		"""Verwijder speler met naam 'name'.
+		"""
+		for player in self.players:
+			if player.name == name:
+				self.players.remove(player)
+				break
 
 	def movePlayer(self, name, velX, velY):
 		"""Verplaats een speler.

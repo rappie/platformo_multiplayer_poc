@@ -58,7 +58,7 @@ class Server(object):
 			
 			# Connectie opslaan.
 			self.connections[id] = address
-			print "Player connected; %s (ID:%i)" % (name, id)
+			print "Player connected: %s (ID:%i)" % (name, id)
 
 			# Player toevoegen aan game.
 			self.gameState.addPlayer(name)
@@ -66,6 +66,13 @@ class Server(object):
 			# Welcome command terugsturen naar client.
 			welcomeString = "0 welcome %s %i" % (name, id)
 			self.sock.sendto(welcomeString, address)
+
+		# Disconnecten.
+		elif command == "disconnect":
+			name = args
+			print "Player disconnected: %s (ID:%i)" % (name, id)
+			self.gameState.removePlayer(name)
+			del(self.connections[id])
 
 		# Moven.
 		elif command == "move":
