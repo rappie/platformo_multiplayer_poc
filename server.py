@@ -85,17 +85,25 @@ class Server(object):
 
 		# Eeuwig blijven draaien.
 		while True:
+
+			# Lees de socket uit tot er niks meer beschikbaar is deze tick.
+			empty = False
+			while not empty:
+				
+				# Haal gegevens op.
+				try:
+					data, address = self.sock.recvfrom( 1024 )
+					
+				# Except voor als er niks meer is.
+				except socket.error:
+					empty = True
+				
+				# Else voor als er wel wat is.
+				else:
+					#print "Received message:", data
+					self.handleRequest(data, address)
 			
-			# Kijk of er wat is binnengekomen bij de socket.
-			try:
-				data, address = self.sock.recvfrom( 1024 )
-			except socket.error:
-				pass
-			else:
-				#print "Received message:", data
-				self.handleRequest(data, address)
-			
-			# Verstuur naar iedereen de nieuwe posities.			
+			# Verstuur naar iedereen de nieuwe posities.
 			for id, connection in self.connections.items():
 				positionString = "%i %s" % (id, self.gameState.toString())
 				self.sock.sendto(positionString, connection)
