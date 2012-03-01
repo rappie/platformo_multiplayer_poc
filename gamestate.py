@@ -12,27 +12,22 @@ class Player(object):
 	
 	def __init__(self, name):
 		self.name = name
-		self.posX = 0
-		self.posY = 0
-
 		self.rect = pygame.Rect(0, 0, 16, 16)		
 	
 	def move(self, velX, velY):
 		"""Move de player.
 		"""
-		self.posX += velX
-		self.posY += velY
+		self.rect = self.rect.move((velX, velY))
 		
 	def getPosition(self):
 		"""Return position tuple.
 		"""
-		return (self.posX, self.posY)
+		return self.rect.topleft
 		
 	def setPosition(self, position):
 		"""Set de position adhv tuple.
 		"""
-		self.posX = position[0]
-		self.posY = position[1]
+		self.rect.topleft = position
 
 
 class GameState(object):
