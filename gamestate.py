@@ -14,12 +14,25 @@ class Player(object):
 		self.name = name
 		self.posX = 0
 		self.posY = 0
-		self.color = 0
+
+		self.rect = pygame.Rect(0, 0, 16, 16)		
+	
+	def move(self, velX, velY):
+		"""Move de player.
+		"""
+		self.posX += velX
+		self.posY += velY
 		
 	def getPosition(self):
 		"""Return position tuple.
 		"""
 		return (self.posX, self.posY)
+		
+	def setPosition(self, position):
+		"""Set de position adhv tuple.
+		"""
+		self.posX = position[0]
+		self.posY = position[1]
 
 
 class GameState(object):
@@ -34,8 +47,9 @@ class GameState(object):
 		"""Voeg een speler toe met naam 'name'.
 		"""
 		player = Player(name)
-		player.posX = random.randint(10, 300)
-		player.posY = random.randint(10, 300)
+		posX = random.randint(10, 300)
+		posY = random.randint(10, 300)
+		player.setPosition((posX, posY))
 		self.players.append(player)
 		
 	def removePlayer(self, name):
@@ -61,8 +75,7 @@ class GameState(object):
 		"""
 		for player in self.players:
 			if player.name == name:
-				player.posX += velX
-				player.posY += velY
+				player.move(velX, velY)
 
 	def toString(self):
 		"""Return string met alle posities van de players.
@@ -90,8 +103,7 @@ class GameState(object):
 			
 			# Player aanmaken.
 			player = Player("dontcare")
-			player.posX = posX
-			player.posY = posY
+			player.setPosition((posX, posY))
 			
 			# Aan de lijst toevoegen.
 			self.players.append(player)
